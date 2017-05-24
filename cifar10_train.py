@@ -135,8 +135,8 @@ def train():
     save_summaries_secs=None,
         config=tf.ConfigProto(
             log_device_placement=FLAGS.log_device_placement)) as mon_sess:
-    while not mon_sess.should_stop():
-        if i % 100 == 0
+        while not mon_sess.should_stop():
+          if i % 100 == 0
             run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             run_metadata = tf.RunMetadata()
             summary, _ = mon_sess.run([merged, train_op],
@@ -144,9 +144,9 @@ def train():
                               run_metadata=run_metadata)
             train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
             train_writer.add_summary(summary, i)
-        else 
+          else 
 	    mon_sess.run(train_op)
-        i=i+1
+          i=i+1
     train_writer.close()
 
 
