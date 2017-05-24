@@ -145,7 +145,7 @@ def train():
             train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
             train_writer.add_summary(summary, i)
           else:
-	    mon_sess.run(train_op)
+            mon_sess.run(train_op)
           i=i+1
     train_writer.close()
 
