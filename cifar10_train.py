@@ -63,7 +63,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 1000000,
+tf.app.flags.DEFINE_integer('max_steps', 200,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
@@ -73,7 +73,7 @@ tf.app.flags.DEFINE_integer('log_frequency', 10,
 
 def train():
   """Train CIFAR-10 for a number of steps."""
-  with tf.Graph().as_default():
+  with tf.Graph().as_default() as g:
     global_step = tf.contrib.framework.get_or_create_global_step()
 
     # Get images and labels for CIFAR-10.
@@ -90,6 +90,11 @@ def train():
     # updates the model parameters.
     train_op = cifar10.train(loss, global_step)
 
+    i=0
+    merged = tf.summary.merge_all()
+    train_writer = tf.summary.FileWriter(FLAGS.train_dir+'train', g)
+    
+    
     class _LoggerHook(tf.train.SessionRunHook):
       """Logs loss and runtime."""
 
@@ -115,16 +120,30 @@ def train():
                         'sec/batch)')
           print (format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch))
-
+			       
+#Frequency is changed for more accurate reference.
+			       
+			       
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.train_dir,
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
                tf.train.NanTensorHook(loss),
                _LoggerHook()],
+               save_checkpoint_secs=60,
+    save_summaries_steps=50,
+    save_summaries_secs=None,
         config=tf.ConfigProto(
             log_device_placement=FLAGS.log_device_placement)) as mon_sess:
       while not mon_sess.should_stop():
-        mon_sess.run(train_op)
+        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        run_metadata = tf.RunMetadata()
+        summary, _ = mon_sess.run([merged, train_op],
+                              options=run_options,
+                              run_metadata=run_metadata)
+        train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
+        train_writer.add_summary(summary, i)
+        i=i+1
+    train_writer.close()
 
 
 def main(argv=None):  # pylint: disable=unused-argument
