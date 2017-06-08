@@ -65,7 +65,7 @@ tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
                            """and checkpoint.""")
 tf.app.flags.DEFINE_integer('max_steps', 1000000,
                             """Number of batches to run.""")
-tf.app.flags.DEFINE_boolean('log_device_placement', False,
+tf.app.flags.DEFINE_boolean('log_device_placement',True,
                             """Whether to log device placement.""")
 tf.app.flags.DEFINE_integer('log_frequency', 10,
                             """How often to log results to the console.""")
@@ -78,14 +78,14 @@ def train():
 
     # Get images and labels for CIFAR-10.
     images, labels = cifar10.distorted_inputs()
-
+    print('cp1')
     # Build a Graph that computes the logits predictions from the
     # inference model.
-    logits = cifar10.inference(images)
-
+    logits = cifar10.inference(images,labels)
+    print('cp2')
     # Calculate loss.
     loss = cifar10.loss(logits, labels)
-
+    print('cp3')
     # Build a Graph that trains the model with one batch of examples and
     # updates the model parameters.
     train_op = cifar10.train(loss, global_step)
@@ -125,15 +125,12 @@ def train():
             log_device_placement=FLAGS.log_device_placement),
         save_checkpoint_secs=20,
         save_summaries_steps=100) as mon_sess:
-      while not mon_sess.should_stop():
-        mon_sess.run(train_op)
+      for i in 100:
+          mon_sess.run(train.op)
 
 
 def main(argv=None):  # pylint: disable=unused-argument
   cifar10.maybe_download_and_extract()
-  if tf.gfile.Exists(FLAGS.train_dir):
-    tf.gfile.DeleteRecursively(FLAGS.train_dir)
-  tf.gfile.MakeDirs(FLAGS.train_dir)
   train()
 
 

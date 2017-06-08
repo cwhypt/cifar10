@@ -63,7 +63,7 @@ import cifar10_input
 FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
-tf.app.flags.DEFINE_integer('batch_size', 64,
+tf.app.flags.DEFINE_integer('batch_size', 4,
                             """Number of images to process in a batch.""")
 tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data',
                            """Path to the CIFAR-10 data directory.""")
@@ -90,6 +90,7 @@ TOWER_NAME = 'tower'
 
 DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
 
+T1=tf.constant([1,0,0,0,0,0,0,0,0,0])
 
 def _activation_summary(x):
   """Helper to create summaries for activations.
@@ -200,7 +201,7 @@ def inputs(eval_data):
   return images, labels
 
 
-def inference(images):
+def inference_individual(images):
   """Build the CIFAR-10 model.
 
   Args:
@@ -284,7 +285,16 @@ def inference(images):
     _activation_summary(softmax_linear)
 
   return softmax_linear
-
+def inference(images,labels):
+  print('cp4') 
+  with tf.Session().as_default() as sess:
+    output = _variable_with_weight_decay('weights',[FLAGS.batch_size,NUM_CLASSES],stddev=0,wd=0.0)
+    for i in range(0,FLAGS.batch_size):
+        if labels[i].eval() == 1:
+           tf.scatter_update(output,i,inference_individual(images[i])).run()
+		
+    return output
+        
 
 def loss(logits, labels):
   """Add L2Loss to all the trainable variables.
